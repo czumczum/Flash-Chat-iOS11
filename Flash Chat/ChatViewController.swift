@@ -8,6 +8,8 @@
 
 import UIKit
 import Firebase
+import SVProgressHUD
+import ChameleonFramework
 
 
 class ChatViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UITextFieldDelegate {
@@ -43,7 +45,9 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         configureTableView()
         retrieveMessages()
-
+        
+        messageTableView.separatorStyle = .none
+        
     }
     
     ///////////////////////////////////////////
@@ -58,8 +62,18 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         cell.senderUsername.text = messageArray[indexPath.row].sender
         cell.avatarImageView.image = UIImage(named: "egg")
         
-        if cell.senderUsername.text == Auth.auth().currentUser?.email {
-            cell.messageBackground.backgroundColor = UIColor(red: 0.4, green: 0.2, blue: 0.2, alpha: 0.4)
+        
+        
+        if cell.senderUsername.text == Auth.auth().currentUser?.email as String? {
+            cell.messageBackground.backgroundColor = UIColor(gradientStyle : UIGradientStyle.topToBottom,
+                                           withFrame : CGRect(x: 0, y: 0, width: cell.frame.width, height: cell.frame.height),
+                                           andColors:[UIColor.flatSkyBlue(), UIColor.flatMint()])
+            cell.avatarImageView.backgroundColor = UIColor.flatPlum()
+        } else {
+            cell.messageBackground.backgroundColor = UIColor(gradientStyle : UIGradientStyle.topToBottom,
+                                                             withFrame : CGRect(x: 0, y: 0, width: cell.frame.width, height: cell.frame.height),
+                                                             andColors:[UIColor.flatGray(), UIColor.flatSand()])
+             cell.avatarImageView.backgroundColor = UIColor.flatLime()
         }
         
         return cell
@@ -68,6 +82,12 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return messageArray.count
         
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        
+        sendPressed(self)
+        return true
     }
     
     ///////////////////////////////////////////
@@ -108,6 +128,8 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @IBAction func sendPressed(_ sender: AnyObject) {
         messageTextfield.endEditing(true)
+        SVProgressHUD.show()
+        
         
         //MARK: Send the message to Firebase and save it in the database
         messageTextfield.isEnabled = false
@@ -120,11 +142,15 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
             (error, refrence) in
             if error != nil {
                 print("error")
+                SVProgressHUD.dismiss()
             } else {
                 print("Message sent succesfuly")
+                SVProgressHUD.dismiss()
+                
                 self.messageTextfield.isEnabled = true
                 self.sendButton.isEnabled = true
                 self.messageTextfield.text = ""
+
             }
         }
         
@@ -146,10 +172,18 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
             self.messageArray.append(message)
             self.configureTableView()
             self.messageTableView.reloadData()
+            
+            self.scrolltoBottom()
         }
     }
     
     
+    func scrolltoBottom() {
+        let sectionIndex = self.messageTableView.numberOfSections - 1
+        let itemIndex = self.messageTableView.numberOfRows(inSection: sectionIndex) - 1
+        let lastIndexPath = IndexPath(item: itemIndex, section: sectionIndex)
+        messageTableView.scrollToRow(at: lastIndexPath, at: .bottom, animated: false)
+    }
 
      ///////////////////////////////////////////
     
