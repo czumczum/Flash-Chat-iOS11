@@ -44,6 +44,8 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
         messageTableView.register(UINib(nibName: "MessageCell", bundle: nil), forCellReuseIdentifier: "customMessageCell")
         
         configureTableView()
+        
+        SVProgressHUD.show()
         retrieveMessages()
         
         messageTableView.separatorStyle = .none
@@ -128,8 +130,12 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @IBAction func sendPressed(_ sender: AnyObject) {
         messageTextfield.endEditing(true)
-        SVProgressHUD.show()
         
+        //Check if the textfield is empty
+        
+        if (messageTextfield.text?.count)! > 0 {
+        
+        SVProgressHUD.show()
         
         //MARK: Send the message to Firebase and save it in the database
         messageTextfield.isEnabled = false
@@ -153,7 +159,10 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
 
             }
         }
-        
+        } else {
+            self.messageTextfield.isEnabled = true
+            self.sendButton.isEnabled = true
+        }
         
     }
     
@@ -172,6 +181,8 @@ class ChatViewController: UIViewController, UITableViewDelegate, UITableViewData
             self.messageArray.append(message)
             self.configureTableView()
             self.messageTableView.reloadData()
+            
+            SVProgressHUD.dismiss()
             
             self.scrolltoBottom()
         }
